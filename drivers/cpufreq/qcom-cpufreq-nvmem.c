@@ -538,23 +538,20 @@ static int qcom_cpufreq_probe(struct platform_device *pdev)
 
 		if (virt_devs) {
 			const char * const *name = config.genpd_names;
-			int i, j;
+
+			int i;
 
 			for (i = 0; *name; i++, name++) {
 				ret = pm_runtime_resume_and_get(virt_devs[i]);
 				if (ret) {
 					dev_err(cpu_dev, "failed to resume %s: %d\n",
 						*name, ret);
-
-					/* Rollback previous PM runtime calls */
-					name = config.genpd_names;
-					for (j = 0; *name && j < i; j++, name++)
-						pm_runtime_put(virt_devs[j]);
-
 					goto free_opp;
 				}
+
+				/* Keep CPU power domain always-on */
+				dev_pm_syscore_device(virt_devs[i], true);
 			}
-			drv->cpus[cpu].virt_devs = virt_devs;
 		}
 	}
 
