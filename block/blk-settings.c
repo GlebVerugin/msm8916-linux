@@ -61,8 +61,14 @@ void blk_apply_bdi_limits(struct backing_dev_info *bdi,
 	/*
 	 * For read-ahead of large files to be effective, we need to read ahead
 	 * at least twice the optimal I/O size.
+	 *
+	 * There is no hardware limitation for the read-ahead size and the user
+	 * might have increased the read-ahead size through sysfs, so don't ever
+	 * decrease it.
 	 */
-	bdi->ra_pages = max(lim->io_opt * 2 / PAGE_SIZE, VM_READAHEAD_PAGES);
+	bdi->ra_pages = max3(bdi->ra_pages,
+				lim->io_opt * 2 / PAGE_SIZE,
+				VM_READAHEAD_PAGES);
 	bdi->io_pages = lim->max_sectors >> PAGE_SECTORS_SHIFT;
 }
 
@@ -116,6 +122,11 @@ static int blk_validate_integrity_limits(struct queue_limits *lim)
 			return -EINVAL;
 		}
 		return 0;
+	}
+
+	if (lim->features & BLK_FEAT_BOUNCE_HIGH) {
+		pr_warn("no bounce buffer support for integrity metadata\n");
+		return -EINVAL;
 	}
 
 	if (!IS_ENABLED(CONFIG_BLK_DEV_INTEGRITY)) {
@@ -248,6 +259,13 @@ static int blk_validate_limits(struct queue_limits *lim)
 	 */
 	if (lim->io_min < lim->physical_block_size)
 		lim->io_min = lim->physical_block_size;
+
+	/*
+	 * The optimal I/O size may not be aligned to physical block size
+	 * (because it may be limited by dma engines which have no clue about
+	 * block size of the disks attached to them), so we round it down here.
+	 */
+	lim->io_opt = round_down(lim->io_opt, lim->physical_block_size);
 
 	/*
 	 * max_hw_sectors has a somewhat weird default for historical reason,
