@@ -492,7 +492,6 @@ static int qcom_cpufreq_probe(struct platform_device *pdev)
 {
 	struct qcom_cpufreq_drv *drv;
 	struct nvmem_cell *speedbin_nvmem;
-	struct device_node *np;
 	struct device *cpu_dev;
 	char pvs_name_buffer[] = "speedXX-pvsXX-vXX";
 	char *pvs_name = pvs_name_buffer;
