@@ -464,18 +464,6 @@ static const struct qcom_cpufreq_match_data match_data_qcs404 = {
 	.genpd_names = qcs404_genpd_names,
 };
 
-static const struct qcom_cpufreq_match_data match_data_ipq6018 = {
-	.get_version = qcom_cpufreq_ipq6018_name_version,
-};
-
-static const struct qcom_cpufreq_match_data match_data_ipq8064 = {
-	.get_version = qcom_cpufreq_ipq8064_name_version,
-};
-
-static const struct qcom_cpufreq_match_data match_data_ipq8074 = {
-	.get_version = qcom_cpufreq_ipq8074_name_version,
-};
-
 static void qcom_cpufreq_suspend_virt_devs(struct qcom_cpufreq_drv *drv, unsigned int cpu)
 {
 	const char * const *name = drv->data->genpd_names;
@@ -611,6 +599,10 @@ free_opp:
 		dev_pm_opp_clear_config(drv->cpus[cpu].opp_token);
 	}
 	return ret;
+free_drv:
+	kfree(drv);
+
+	return ret;
 }
 
 static void qcom_cpufreq_remove(struct platform_device *pdev)
@@ -676,14 +668,14 @@ MODULE_DEVICE_TABLE(of, qcom_cpufreq_match_list);
  */
 static int __init qcom_cpufreq_init(void)
 {
-	struct device_node *np __free(device_node) = of_find_node_by_path("/");
+	struct device_node *npt __free(device_node) = of_find_node_by_path("/");
 	const struct of_device_id *match;
 	int ret;
 
-	if (!np)
+	if (!npt)
 		return -ENODEV;
 
-	match = of_match_node(qcom_cpufreq_match_list, np);
+	match = of_match_node(qcom_cpufreq_match_list, npt);
 	if (!match)
 		return -ENODEV;
 
