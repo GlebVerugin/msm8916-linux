@@ -50,6 +50,7 @@ struct qcom_cpufreq_drv;
 struct qcom_cpufreq_match_data {
 	int (*get_version)(struct device *cpu_dev,
 			   struct device_node *np,
+			   struct nvmem_cell *speedbin_nvmem,
 			   char **pvs_name,
 			   struct qcom_cpufreq_drv *drv);
 	const char **genpd_names;
