@@ -679,14 +679,14 @@ MODULE_DEVICE_TABLE(of, qcom_cpufreq_match_list);
  */
 static int __init qcom_cpufreq_init(void)
 {
-	struct device_node *npt __free(device_node) = of_find_node_by_path("/");
+	struct device_node *np __free(device_node) = of_find_node_by_path("/");
 	const struct of_device_id *match;
 	int ret;
 
-	if (!npt)
+	if (!np)
 		return -ENODEV;
 
-	match = of_match_node(qcom_cpufreq_match_list, npt);
+	match = of_match_node(qcom_cpufreq_match_list, np);
 	if (!match)
 		return -ENODEV;
 
